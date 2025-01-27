@@ -15,7 +15,6 @@ app.use((req, res, next) => {
         res.status(406).json('Incorrect format, only JSON is allowed as accept header');
     } else {
         res.header('Access-Control-Allow-Origin', '*');
-        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
         res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         next();
     }

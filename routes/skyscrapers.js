@@ -8,9 +8,7 @@ router.options('/', (req, res) => {
     res.header('Allow', 'GET, POST, OPTIONS');
     res.header('Content-Type', 'application/x-www-form-urlencoded');
     res.header('Accept', 'application/json, application/x-www-form-urlencoded');
-    res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.status(204).send();
 });
 
@@ -18,9 +16,7 @@ router.options('/seed', (req, res) => {
     res.header('Allow', 'POST, OPTIONS');
     res.header('Content-Type', 'application/x-www-form-urlencoded');
     res.header('Accept', 'application/json, application/x-www-form-urlencoded');
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.status(204).send();
 });
 
@@ -28,9 +24,7 @@ router.options('/:id', (req, res) => {
     res.header('Allow', 'GET, PUT, DELETE, OPTIONS');
     res.header('Content-Type', 'application/x-www-form-urlencoded');
     res.header('Accept', 'application/json, application/x-www-form-urlencoded');
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Methods', 'GET, PUT, DELETE, OPTIONS');
     res.status(204).send();
 });
 
@@ -97,21 +91,30 @@ router.post('/seed', async (req, res) => {
 
 router.post('/', async (req, res) => {
     try {
-        await Skyscraper.create({
+        const newSkyscraper = await Skyscraper.create({
             title: req.body.title,
             description: req.body.description,
             city: req.body.city
         });
-        res.status(201).json({message: `you created ${req.body.title}`});
+        res.status(201).json({
+            message: `You created ${newSkyscraper.title}`,
+            id: newSkyscraper._id
+        });
     } catch (e) {
-        res.status(400).json({message: 'Failed to create skyscraper', error: e.message});
+        res.status(400).json({
+            message: 'Failed to create skyscraper',
+            error: e.message
+        });
     }
 });
 
 
 router.put('/:id', async (req, res) => {
     try {
-        const updatedSkyscraper = await Skyscraper.findByIdAndUpdate(req.params.id, req.body, {new: true, runValidators: true});
+        const updatedSkyscraper = await Skyscraper.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
+        });
         if (!updatedSkyscraper) {
             return res.status(404).json({message: "Skyscraper not found"});
         }
@@ -126,11 +129,11 @@ router.delete('/:id', async (req, res) => {
     try {
         const deletedSkyscraper = await Skyscraper.findByIdAndDelete(req.params.id);
         if (!deletedSkyscraper) {
-            return res.status(404).json({ message: "Skyscraper not found" });
+            return res.status(404).json({message: "Skyscraper not found"});
         }
-        res.status(204).json({ message: "Skyscraper deleted successfully", skyscraper: deletedSkyscraper });
+        res.status(204).json({message: "Skyscraper deleted successfully", skyscraper: deletedSkyscraper});
     } catch (e) {
-        res.status(400).json({ message: "Failed to delete Skyscraper", error: e.message });
+        res.status(400).json({message: "Failed to delete Skyscraper", error: e.message});
     }
 });
 
