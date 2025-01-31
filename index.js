@@ -10,28 +10,40 @@ app.use(express.json());
 // Middleware voor www-urlencoded-gegevens
 app.use(express.urlencoded({ extended: true }));
 
-// app.use((req, res, next) => {
-//     if (req.header('Accept') !== 'application/json' && req.method !== "OPTIONS") {
-//         res.status(406).json('Incorrect format, only JSON is allowed as accept header');
-//     } else {
-//         res.header('Access-Control-Allow-Origin', '*');
-//         res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-//
-//         next();
-//     }
-// })
-
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-
-    if (req.method === 'OPTIONS') {
+    if (req.header('Accept') !== 'application/json' && req.method !== "OPTIONS") {
         res.status(406).json('Incorrect format, only JSON is allowed as accept header');
-    }
+    } else {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-    next();
-});
+        next();
+    }
+})
+
+// app.use((req, res, next) => {
+//     res.header('Access-Control-Allow-Origin', '*');
+//     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+//     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+//
+//     if (req.method === 'OPTIONS') {
+//         res.status(204).json('Incorrect format, only JSON is allowed as accept header');
+//     }
+//
+//     next();
+// });
+
+// app.use((req, res, next) => {
+//     res.header('Access-Control-Allow-Origin', '*');
+//     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+//     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+//
+//     if (req.method === 'OPTIONS') {
+//         return res.status(204).send();  // Return a successful preflight response
+//     }
+//
+//     next();
+// });
 
 
 app.get('/',(req,res)=> {

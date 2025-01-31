@@ -7,6 +7,8 @@ const skyscraperSchema = new mongoose.Schema( {
     height: {type: String, required: false},
     category: {type: String, required: false, default: '0'},
     favorite: {type: String, required: false, default: 'false'},
+    img: {type: String, required: false}
+
 });
 
 const Skyscraper = mongoose.model('Skyscraper', skyscraperSchema);

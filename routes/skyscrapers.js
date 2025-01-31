@@ -1,6 +1,7 @@
-import express from 'express';
+import express, {request} from 'express';
 import {faker} from "@faker-js/faker";
 import Skyscraper from "../models/Skyscraper.js";
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
@@ -65,47 +66,52 @@ router.get('/:id', async (req, res) => {
                 collection: {href: baseUrl}
             }
         });
-        //res.json({message: `you created ${req.params.id} spots`});
+
     } catch (err) {
         res.status(500).json({message: 'Failed to fetch skyscraper'});
     }
 });
 
-// router.post('/seed', async (req, res) => {
-//     try {
-//         await Skyscraper.deleteMany({});
-//
-//         for (let i = 0; i < req.body.amount; i++) {
-//             await Skyscraper.create({
-//                 title: faker.word.adjective(),
-//                 description: faker.lorem.paragraph(3),
-//                 city: faker.lorem.paragraph({min: 1, max: 5})
-//             });
-//         }
-//         res.json({message: `you created ${req.body.amount} skyscrapers`});
-//     } catch (e) {
-//         res.status(404).send('Not found');
-//     }
-// });
+const JWT_SECRET = 'programmeren6';
+router.post('/login', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+
+        if (!authHeader) {
+            return res.status(401).json({ message: 'Authorization header is required' });  // Return to stop execution
+        }
+
+        const base64Credentials = authHeader.split(' ')[1];
+        const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+        const [username, password] = credentials.split(':');
+
+        if (password !== 'programmeren6') {
+            return res.status(403).json({ message: 'Invalid credentials' });  // Return to stop execution
+        }
+        const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '1h' });
+        return res.json({ token });
+    } catch (e) {
+        return res.status(500).json({ message: 'Internal server error', error: e.message });
+    }
+});
+
+
 
 router.patch('/favo/:id', async (req, res) => {
     try {
-        // Vind de specifieke skyscraper op basis van ID
+
         const skyscraper = await Skyscraper.findById(req.params.id);
 
         if (!skyscraper) {
             return res.status(404).json({ message: "Skyscraper not found" });
         }
-
-        // Toggle de favorite waarde
+        console.log('Current favorite status:', skyscraper.favorite);
         if (skyscraper.favorite === 'true') {
             skyscraper.favorite = 'false'
         } else if (skyscraper.favorite === 'false') {
             skyscraper.favorite = 'true'
         }
 
-
-        // Sla de update op
         await skyscraper.save();
 
         res.status(200).json({ message: "Favorite status updated", skyscraper });
@@ -116,6 +122,18 @@ router.patch('/favo/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
     try {
+        const imageUrls = [
+            'https://upload.wikimedia.org/wikipedia/en/thumb/9/93/Burj_Khalifa.jpg/200px-Burj_Khalifa.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/View_of_Empire_State_Building_from_Rockefeller_Center_New_York_City_dllu_Cropped.jpg/220px-View_of_Empire_State_Building_from_Rockefeller_Center_New_York_City_dllu_Cropped.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/800px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/The_Twins_SE_Asia_2019_%2849171985716%29_%28cropped%29_2.jpg/250px-The_Twins_SE_Asia_2019_%2849171985716%29_%28cropped%29_2.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Azabudai_Hills%2C_opening_day_36_%28cropped%29.jpg/220px-Azabudai_Hills%2C_opening_day_36_%28cropped%29.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/5/58/Tokyo_Tower_2023.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/30_St_Mary_Axe_from_Leadenhall_Street.jpg/144px-30_St_Mary_Axe_from_Leadenhall_Street.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/The_Shard_from_the_Sky_Garden_2015.jpg/1200px-The_Shard_from_the_Sky_Garden_2015.jpg',
+        ];
+
+
         const method = req.body.METHOD;
         if (method === 'seed') {
             const method = req.body.DELETEOTHERS;
@@ -123,13 +141,15 @@ router.post('/', async (req, res) => {
                 await Skyscraper.deleteMany({});
             }
             for (let i = 0; i < req.body.amount; i++) {
+                const randomImage = imageUrls[Math.floor(Math.random() * imageUrls.length)];
                 await Skyscraper.create({
                     title: faker.word.adjective(),
                     description: faker.lorem.paragraph(2),
                     city: faker.location.city(),
                     height: faker.number.bigInt({ min: 1, max: 200 }),
                     category: faker.number.bigInt({ min: 0, max: 2 }),
-                    favorite: '0',
+                    favorite: 'false',
+                    img: randomImage
                 });
             }
             res.json({message: `you created ${req.body.amount} skyscrapers`});
@@ -152,13 +172,15 @@ router.post('/', async (req, res) => {
             } else {
                 favorite = 'false'
             }
+
             const newSkyscraper = await Skyscraper.create({
                 title: req.body.title,
                 description: req.body.description,
                 city: req.body.city,
                 height: height,
                 category: category,
-                favorite: favorite
+                favorite: favorite,
+                img: randomImage
             });
             res.status(201).json({
                 message: `You created ${newSkyscraper.title}`,
@@ -202,6 +224,7 @@ router.delete('/:id', async (req, res) => {
         res.status(400).json({message: "Failed to delete Skyscraper", error: e.message});
     }
 });
+
 
 
 export default router;
